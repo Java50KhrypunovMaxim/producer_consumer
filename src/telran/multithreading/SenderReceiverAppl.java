@@ -12,46 +12,46 @@ public class SenderReceiverAppl {
 	private static final int N_RECEIVERS = 10;
 
 	public static void main(String[] args) throws InterruptedException {
-		BlockingQueue<String> messageBox = new LinkedBlockingQueue<String>();
-		ProducerSender sender = startSender(messageBox, N_MESSAGES);
-		ConsumerReceiver[] receivers = startReceivers(messageBox, N_RECEIVERS);
+		BlockingQueue<String> evenMessageBox = new LinkedBlockingQueue<String>();
+		BlockingQueue<String> oddMessageBox = new LinkedBlockingQueue<String>();
+		ProducerSender sender = startSender(evenMessageBox, oddMessageBox, N_MESSAGES);
+		ConsumerReceiver[] receivers = startReceivers(evenMessageBox, oddMessageBox, N_RECEIVERS);
 		sender.join();
 		stopReceivers(receivers);
 		displayResult();
-		
-		
-
 	}
 
 	private static void displayResult() {
-		System.out.printf("counter of processed messsages is %d\n",
-				ConsumerReceiver.getMessagesCounter());
-		
+		System.out.printf("counter of processed messsages is %d\n", ConsumerReceiver.getMessagesCounter());
+
 	}
 
 	private static void stopReceivers(ConsumerReceiver[] receivers) throws InterruptedException {
-		for(ConsumerReceiver receiver: receivers) {
+		for (ConsumerReceiver receiver : receivers) {
 			receiver.interrupt();
 			receiver.join();
 		}
-		
+
 	}
 
-	private static ConsumerReceiver[] startReceivers(BlockingQueue<String> messageBox,
-			int nReceivers) {
-		ConsumerReceiver[] receivers = 
-		IntStream.range(0, nReceivers).mapToObj(i -> {
+	private static ConsumerReceiver[] startReceivers(BlockingQueue<String> evenMessageBox,
+			BlockingQueue<String> oddMessageBox, int nReceivers) {
+		ConsumerReceiver[] receivers = IntStream.range(0, nReceivers).mapToObj(i -> {
 			ConsumerReceiver receiver = new ConsumerReceiver();
-			receiver.setMessageBox(messageBox);
+			if (i % 2 == 0) {
+				receiver.setMessageBox(evenMessageBox);
+			} else {
+				receiver.setMessageBox(oddMessageBox);
+			}
 			return receiver;
 		}).toArray(ConsumerReceiver[]::new);
 		Arrays.stream(receivers).forEach(ConsumerReceiver::start);
 		return receivers;
 	}
 
-	private static ProducerSender startSender(BlockingQueue<String> messageBox,
+	private static ProducerSender startSender(BlockingQueue<String> evenMessageBox, BlockingQueue<String> oddMessageBox,
 			int nMessages) {
-		ProducerSender sender = new ProducerSender(messageBox, nMessages);
+		ProducerSender sender = new ProducerSender(evenMessageBox, oddMessageBox, nMessages);
 		sender.start();
 		return sender;
 	}
