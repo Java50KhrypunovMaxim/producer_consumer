@@ -35,17 +35,18 @@ public class SenderReceiverAppl {
 	}
 
 	private static ConsumerReceiver[] startReceivers(BlockingQueue<String> evenMessageBox,
-			BlockingQueue<String> oddMessageBox, int nReceivers) {
-		ConsumerReceiver[] receivers = IntStream.range(0, nReceivers).mapToObj(i -> {
-			ConsumerReceiver receiver = new ConsumerReceiver();
-			if (i % 2 == 0) {
-				receiver.setMessageBox(evenMessageBox);
+		BlockingQueue<String> oddMessageBox, int nReceivers) {
+		ConsumerReceiver[] receivers = new ConsumerReceiver[nReceivers];
+		for (int i = 0; i < nReceivers; i++) {
+			receivers[i] = new ConsumerReceiver();
+			long threadId = receivers[i].getId();
+			if (threadId % 2 == 0) {
+				receivers[i].setMessageBox(evenMessageBox);
 			} else {
-				receiver.setMessageBox(oddMessageBox);
+				receivers[i].setMessageBox(oddMessageBox);
 			}
-			return receiver;
-		}).toArray(ConsumerReceiver[]::new);
-		Arrays.stream(receivers).forEach(ConsumerReceiver::start);
+			receivers[i].start();
+		}
 		return receivers;
 	}
 
